@@ -1,2 +1,2 @@
 # RapidRecruits
-A sandbox to train programming captains of tomorrow
+A sandbox to train the programming captains of tomorrow.
