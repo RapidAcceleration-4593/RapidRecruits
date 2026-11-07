@@ -18,21 +18,21 @@ import edu.wpi.first.wpilibj.XboxController;
 import java.util.List;
 
 public class Robot extends TimedRobot {
-    private final XboxController m_controller = new XboxController(0);
+    private final XboxController controller = new XboxController(0);
 
     // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0
     // to 1.
-    private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(3);
-    private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
+    private final SlewRateLimiter speedLimiter = new SlewRateLimiter(3);
+    private final SlewRateLimiter rotLimiter = new SlewRateLimiter(3);
 
-    private final Drivetrain m_drive = new Drivetrain();
-    private final LTVUnicycleController m_feedback = new LTVUnicycleController(0.020);
-    private final Timer m_timer = new Timer();
-    private final Trajectory m_trajectory;
+    private final SimulatedDrivetrain drive = new SimulatedDrivetrain();
+    private final LTVUnicycleController feedback = new LTVUnicycleController(0.020);
+    private final Timer timer = new Timer();
+    private final Trajectory trajectory;
 
     /** Called once at the beginning of the robot program. */
     public Robot() {
-        m_trajectory = TrajectoryGenerator.generateTrajectory(
+        trajectory = TrajectoryGenerator.generateTrajectory(
                 new Pose2d(2, 2, Rotation2d.kZero),
                 List.of(),
                 new Pose2d(6, 4, Rotation2d.kZero),
@@ -41,39 +41,43 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotPeriodic() {
-        m_drive.periodic();
+        drive.periodic();
     }
 
     @Override
     public void autonomousInit() {
-        m_timer.restart();
-        m_drive.resetOdometry(m_trajectory.getInitialPose());
+        timer.restart();
+        drive.resetOdometry(trajectory.getInitialPose());
     }
 
     @Override
     public void autonomousPeriodic() {
-        double elapsed = m_timer.get();
-        Trajectory.State reference = m_trajectory.sample(elapsed);
-        ChassisSpeeds speeds = m_feedback.calculate(m_drive.getPose(), reference);
-        m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
+        // The trajectory planner calculates the position and speed at which the robot
+        // should be moving based on the current time.
+        // Then, the feedback controller determines the speed the robot should move at,
+        // given its current position, to best match the trajectory.
+        double elapsed = timer.get();
+        Trajectory.State reference = trajectory.sample(elapsed);
+        ChassisSpeeds speeds = feedback.calculate(drive.getPose(), reference);
+        drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
     }
 
     @Override
     public void teleopPeriodic() {
         // Get the x speed. We are inverting this because Xbox controllers return
         // negative values when we push forward.
-        double xSpeed = -m_speedLimiter.calculate(m_controller.getLeftY()) * Drivetrain.kMaxSpeed;
+        double xSpeed = -speedLimiter.calculate(controller.getLeftY()) * Drivetrain.kMaxSpeed;
 
         // Get the rate of angular rotation. We are inverting this because we want a
         // positive value when we pull to the left (remember, CCW is positive in
         // mathematics). Xbox controllers return positive values when you pull to
         // the right by default.
-        double rot = -m_rotLimiter.calculate(m_controller.getRightX()) * Drivetrain.kMaxAngularSpeed;
-        m_drive.drive(xSpeed, rot);
+        double rot = -rotLimiter.calculate(controller.getRightX()) * Drivetrain.kMaxAngularSpeed;
+        drive.drive(xSpeed, rot);
     }
 
     @Override
     public void simulationPeriodic() {
-        m_drive.simulationPeriodic();
+        drive.simulationPeriodic();
     }
 }
