@@ -4,6 +4,14 @@
 
 package frc.robot;
 
+import static frc.robot.Constants.Drivetrain.*;
+
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig;
+import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -13,50 +21,46 @@ import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 
 /** A simple differential drivetrain that can be extended with simulation capabilities. */
 public class Drivetrain {
-    // 3 meters per second.
-    public static final double kMaxSpeed = 3.0;
-    // 1/2 rotation per second.
-    public static final double kMaxAngularSpeed = Math.PI;
-
     // Protected modifiers allow subclasses to access fields
-    protected static final double kTrackWidth = 0.381 * 2;
-    protected static final double kWheelRadius = 0.0508;
-    protected static final int kEncoderResolution = -4096;
+    protected final SparkMax leftLeader = new SparkMax(leftLeaderId, MotorType.kBrushless);
+    protected final SparkMax leftFollower = new SparkMax(leftFollowerId, MotorType.kBrushless);
+    protected final SparkMax rightLeader = new SparkMax(rightLeaderId, MotorType.kBrushless);
+    protected final SparkMax rightFollower = new SparkMax(rightFollowerId, MotorType.kBrushless);
 
-    protected final PWMSparkMax leftLeader = new PWMSparkMax(1);
-    protected final PWMSparkMax leftFollower = new PWMSparkMax(2);
-    protected final PWMSparkMax rightLeader = new PWMSparkMax(3);
-    protected final PWMSparkMax rightFollower = new PWMSparkMax(4);
+    private final Encoder leftEncoder = new Encoder(leftEncoderAId, leftEncoderBId);
+    private final Encoder rightEncoder = new Encoder(rightEncoderAId, rightEncoderBId);
 
-    protected final Encoder leftEncoder = new Encoder(0, 1);
-    protected final Encoder rightEncoder = new Encoder(2, 3);
+    private final PIDController leftPIDController = new PIDController(kP, kI, kD);
+    private final PIDController rightPIDController = new PIDController(kP, kI, kD);
 
-    protected final PIDController leftPIDController = new PIDController(8.5, 0, 0);
-    protected final PIDController rightPIDController = new PIDController(8.5, 0, 0);
+    private final AnalogGyro gyro = new AnalogGyro(gyroId);
 
-    protected final AnalogGyro gyro = new AnalogGyro(0);
-
-    protected final DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(kTrackWidth);
-    protected final DifferentialDriveOdometry odometry = new DifferentialDriveOdometry(
-            gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
+    private final DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(kTrackWidth);
+    private final DifferentialDriveOdometry odometry =
+            new DifferentialDriveOdometry(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
 
     // Gains are for example purposes only - must be determined for your own
     // robot!
-    protected final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(1, 3);
+    private final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV);
 
     /** Subsystem constructor. */
     public Drivetrain() {
-        leftLeader.addFollower(leftFollower);
-        rightLeader.addFollower(rightFollower);
-
         // We need to invert one side of the drivetrain so that positive voltages
         // result in both sides moving forward. Depending on how your robot's
         // gearbox is constructed, you might have to invert the left side instead.
-        rightLeader.setInverted(true);
+        SparkBaseConfig rightLeaderConfig = new SparkMaxConfig().inverted(true);
+
+        // There are four motors total: two leaders and two followers.
+        // The following motors simply match the speed of the leaders.
+        SparkBaseConfig leftFollowConfig = new SparkMaxConfig().follow(leftLeader);
+        SparkBaseConfig rightFollowConfig = new SparkMaxConfig().follow(rightLeader);
+
+        rightLeader.configure(rightLeaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        leftFollower.configure(leftFollowConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        rightFollower.configure(rightFollowConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // Set the distance per pulse for the drive encoders. We can simply use the
         // distance traveled for one rotation of the wheel divided by the encoder
@@ -66,14 +70,12 @@ public class Drivetrain {
 
         leftEncoder.reset();
         rightEncoder.reset();
-
-        rightLeader.setInverted(true);
     }
 
     /** Sets speeds to the drivetrain motors. */
     public void setSpeeds(DifferentialDriveWheelSpeeds speeds) {
-        final double leftFeedforward = m_feedforward.calculate(speeds.leftMetersPerSecond);
-        final double rightFeedforward = m_feedforward.calculate(speeds.rightMetersPerSecond);
+        final double leftFeedforward = feedforward.calculate(speeds.leftMetersPerSecond);
+        final double rightFeedforward = feedforward.calculate(speeds.rightMetersPerSecond);
         double leftOutput = leftPIDController.calculate(leftEncoder.getRate(), speeds.leftMetersPerSecond);
         double rightOutput = rightPIDController.calculate(rightEncoder.getRate(), speeds.rightMetersPerSecond);
 
@@ -98,8 +100,7 @@ public class Drivetrain {
 
     /** Resets robot odometry. */
     public void resetOdometry(Pose2d pose) {
-        odometry.resetPosition(
-                gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance(), pose);
+        odometry.resetPosition(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance(), pose);
     }
 
     /** Check the current robot pose. */

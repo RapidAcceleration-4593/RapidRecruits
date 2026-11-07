@@ -1,5 +1,11 @@
 package frc.robot;
 
+import static frc.robot.Constants.Drivetrain.*;
+import static frc.robot.Constants.Drivetrain.gyroId;
+import static frc.robot.Constants.Drivetrain.leftEncoderAId;
+import static frc.robot.Constants.Drivetrain.rightEncoderAId;
+
+import com.revrobotics.sim.SparkMaxSim;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
@@ -19,21 +25,25 @@ import edu.wpi.first.wpilibj.simulation.EncoderSim;
  */
 public class SimulatedDrivetrain extends Drivetrain {
     // Simulation classes help us simulate our robot
-    private final AnalogGyroSim m_gyroSim = new AnalogGyroSim(gyro);
-    private final EncoderSim m_leftEncoderSim = new EncoderSim(leftEncoder);
-    private final EncoderSim m_rightEncoderSim = new EncoderSim(rightEncoder);
+    private final AnalogGyroSim gyroSim = new AnalogGyroSim(gyroId);
+    private final EncoderSim leftEncoderSim = EncoderSim.createForChannel(leftEncoderAId);
+    private final EncoderSim rightEncoderSim = EncoderSim.createForChannel(rightEncoderAId);
+    private final SparkMaxSim leftLeaderSim = new SparkMaxSim(leftLeader, DCMotor.getNEO(2));
+    private final SparkMaxSim rightLeaderSim = new SparkMaxSim(rightLeader, DCMotor.getNEO(2));
+
+    private final LinearSystem<N2, N2, N2> drivetrainSystem =
+            LinearSystemId.identifyDrivetrainSystem(1.98, 0.2, 1.5, 0.3);
+    private final DifferentialDrivetrainSim drivetrainSimulator = new DifferentialDrivetrainSim(
+            drivetrainSystem, DCMotor.getNEO(2), kDriveGearing, kTrackWidth, kWheelRadius, null);
+
     private final StructPublisher<Pose2d> simPosePub = NetworkTableInstance.getDefault()
             .getStructTopic("SimulationPose", Pose2d.struct)
             .publish();
-    private final LinearSystem<N2, N2, N2> m_drivetrainSystem =
-            LinearSystemId.identifyDrivetrainSystem(1.98, 0.2, 1.5, 0.3);
-    private final DifferentialDrivetrainSim m_drivetrainSimulator =
-            new DifferentialDrivetrainSim(m_drivetrainSystem, DCMotor.getCIM(2), 8, kTrackWidth, kWheelRadius, null);
 
     /** Resets robot odometry. */
     public void resetOdometry(Pose2d pose) {
         super.resetOdometry(pose);
-        m_drivetrainSimulator.setPose(pose);
+        drivetrainSimulator.setPose(pose);
     }
 
     /** Update our simulation. This should be run every robot loop in simulation. */
@@ -42,21 +52,33 @@ public class SimulatedDrivetrain extends Drivetrain {
         // simulation, and write the simulated positions and velocities to our
         // simulated encoder and gyro. We negate the right side so that positive
         // voltages make the right side move forward.
-        m_drivetrainSimulator.setInputs(
-                leftLeader.get() * RobotController.getInputVoltage(),
-                rightLeader.get() * RobotController.getInputVoltage());
-        m_drivetrainSimulator.update(0.02);
 
-        m_leftEncoderSim.setDistance(m_drivetrainSimulator.getLeftPositionMeters());
-        m_leftEncoderSim.setRate(m_drivetrainSimulator.getLeftVelocityMetersPerSecond());
-        m_rightEncoderSim.setDistance(m_drivetrainSimulator.getRightPositionMeters());
-        m_rightEncoderSim.setRate(m_drivetrainSimulator.getRightVelocityMetersPerSecond());
-        m_gyroSim.setAngle(-m_drivetrainSimulator.getHeading().getDegrees());
+        double leftWheelRotationsRPM = calculateMotorRPM(drivetrainSimulator.getLeftVelocityMetersPerSecond());
+        double rightWheelRotationsRPM = calculateMotorRPM(drivetrainSimulator.getRightVelocityMetersPerSecond());
+
+        leftLeaderSim.iterate(leftWheelRotationsRPM, RobotController.getBatteryVoltage(), 0.02);
+        rightLeaderSim.iterate(rightWheelRotationsRPM, RobotController.getBatteryVoltage(), 0.02);
+
+        drivetrainSimulator.setInputs(
+                leftLeaderSim.getAppliedOutput() * RobotController.getBatteryVoltage(),
+                rightLeaderSim.getAppliedOutput() * RobotController.getBatteryVoltage());
+        drivetrainSimulator.update(0.02);
+
+        leftEncoderSim.setDistance(drivetrainSimulator.getLeftPositionMeters());
+        leftEncoderSim.setRate(drivetrainSimulator.getLeftVelocityMetersPerSecond());
+        rightEncoderSim.setDistance(drivetrainSimulator.getRightPositionMeters());
+        rightEncoderSim.setRate(drivetrainSimulator.getRightVelocityMetersPerSecond());
+        gyroSim.setAngle(-drivetrainSimulator.getHeading().getDegrees());
     }
 
     /** Update odometry - this should be run every robot loop. */
     public void periodic() {
         super.periodic();
-        simPosePub.set(m_drivetrainSimulator.getPose());
+        simPosePub.set(drivetrainSimulator.getPose());
+    }
+
+    private double calculateMotorRPM(double wheelTangentalVelocity) {
+        // Convert tangental velocity (m/s) to rad/s to rot/s to RPM
+        return wheelTangentalVelocity / kWheelRadius / 2 / Math.PI * 60 / kDriveGearing;
     }
 }
