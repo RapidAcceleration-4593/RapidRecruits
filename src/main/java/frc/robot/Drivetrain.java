@@ -24,26 +24,36 @@ import edu.wpi.first.wpilibj.Encoder;
 
 /** A simple differential drivetrain that can be extended with simulation capabilities. */
 public class Drivetrain {
-    // Protected modifiers allow subclasses to access fields
+    // Protected modifiers allow subclasses to access fields.
+    // We do this to allow the simulation class to modify the motors.
+    // SparkMaxes are motor controllers.
     protected final SparkMax leftLeader = new SparkMax(leftLeaderId, MotorType.kBrushless);
     protected final SparkMax leftFollower = new SparkMax(leftFollowerId, MotorType.kBrushless);
     protected final SparkMax rightLeader = new SparkMax(rightLeaderId, MotorType.kBrushless);
     protected final SparkMax rightFollower = new SparkMax(rightFollowerId, MotorType.kBrushless);
 
+    // Encoders measure the rotation of the wheels, AKA how far they have driven.
     private final Encoder leftEncoder = new Encoder(leftEncoderAId, leftEncoderBId);
     private final Encoder rightEncoder = new Encoder(rightEncoderAId, rightEncoderBId);
 
+    // PID controllers allow for feedback control: changing how fast we drive the motor
+    // depending on how close we are to the setpoint.
     private final PIDController leftPIDController = new PIDController(kP, kI, kD);
     private final PIDController rightPIDController = new PIDController(kP, kI, kD);
 
+    // A gyro measures the robot's orientation on the field.
     private final AnalogGyro gyro = new AnalogGyro(gyroId);
 
+    // The kinematics describe the physical properties of the robot.
+    // They help us predict how it will move.
     private final DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(kTrackWidth);
+
+    // Odometry lets us estimate where the robot is on the field, based off of the gyro
+    // and encoder readings. This is highly useful for the autonomous period.
     private final DifferentialDriveOdometry odometry =
             new DifferentialDriveOdometry(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
 
-    // Gains are for example purposes only - must be determined for your own
-    // robot!
+    // Motor feedforwards predict how much voltage will be needed to reach a certain motor velocity.
     private final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV);
 
     /** Subsystem constructor. */
@@ -58,6 +68,9 @@ public class Drivetrain {
         SparkBaseConfig leftFollowConfig = new SparkMaxConfig().follow(leftLeader);
         SparkBaseConfig rightFollowConfig = new SparkMaxConfig().follow(rightLeader);
 
+        // The ResetMode determines whether all the other configuration options are reset to default values
+        // The PersistMode determines if the configuration should be written to storage and persist
+        // through power cycling.
         rightLeader.configure(rightLeaderConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         leftFollower.configure(leftFollowConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         rightFollower.configure(rightFollowConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -74,6 +87,8 @@ public class Drivetrain {
 
     /** Sets speeds to the drivetrain motors. */
     public void setSpeeds(DifferentialDriveWheelSpeeds speeds) {
+        // Use feedforward and feedback mechanisms to calculate how much voltage we need
+        // to reach the setpoint.
         final double leftFeedforward = feedforward.calculate(speeds.leftMetersPerSecond);
         final double rightFeedforward = feedforward.calculate(speeds.rightMetersPerSecond);
         double leftOutput = leftPIDController.calculate(leftEncoder.getRate(), speeds.leftMetersPerSecond);

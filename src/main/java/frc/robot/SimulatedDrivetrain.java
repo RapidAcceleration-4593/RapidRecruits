@@ -48,26 +48,32 @@ public class SimulatedDrivetrain extends Drivetrain {
 
     /** Update our simulation. This should be run every robot loop in simulation. */
     public void simulationPeriodic() {
+
+        double leftInversionFactor = leftLeader.configAccessor.getInverted() ? -1 : 1;
+        double rightInversionFactor = rightLeader.configAccessor.getInverted() ? 1 : -1;
+
         // To update our simulation, we set motor voltage inputs, update the
         // simulation, and write the simulated positions and velocities to our
         // simulated encoder and gyro. We negate the right side so that positive
         // voltages make the right side move forward.
 
-        double leftWheelRotationsRPM = calculateMotorRPM(drivetrainSimulator.getLeftVelocityMetersPerSecond());
-        double rightWheelRotationsRPM = calculateMotorRPM(drivetrainSimulator.getRightVelocityMetersPerSecond());
+        double leftWheelRotationsRPM =
+                calculateMotorRPM(drivetrainSimulator.getLeftVelocityMetersPerSecond()) * leftInversionFactor;
+        double rightWheelRotationsRPM =
+                calculateMotorRPM(drivetrainSimulator.getRightVelocityMetersPerSecond()) * rightInversionFactor;
 
         leftLeaderSim.iterate(leftWheelRotationsRPM, RobotController.getBatteryVoltage(), 0.02);
         rightLeaderSim.iterate(rightWheelRotationsRPM, RobotController.getBatteryVoltage(), 0.02);
 
         drivetrainSimulator.setInputs(
-                leftLeaderSim.getAppliedOutput() * RobotController.getBatteryVoltage(),
-                rightLeaderSim.getAppliedOutput() * RobotController.getBatteryVoltage());
+                leftLeaderSim.getAppliedOutput() * RobotController.getBatteryVoltage() * leftInversionFactor,
+                rightLeaderSim.getAppliedOutput() * RobotController.getBatteryVoltage() * rightInversionFactor);
         drivetrainSimulator.update(0.02);
 
-        leftEncoderSim.setDistance(drivetrainSimulator.getLeftPositionMeters());
-        leftEncoderSim.setRate(drivetrainSimulator.getLeftVelocityMetersPerSecond());
-        rightEncoderSim.setDistance(drivetrainSimulator.getRightPositionMeters());
-        rightEncoderSim.setRate(drivetrainSimulator.getRightVelocityMetersPerSecond());
+        leftEncoderSim.setDistance(drivetrainSimulator.getLeftPositionMeters() * leftInversionFactor);
+        leftEncoderSim.setRate(drivetrainSimulator.getLeftVelocityMetersPerSecond() * leftInversionFactor);
+        rightEncoderSim.setDistance(drivetrainSimulator.getRightPositionMeters() * rightInversionFactor);
+        rightEncoderSim.setRate(drivetrainSimulator.getRightVelocityMetersPerSecond() * rightInversionFactor);
         gyroSim.setAngle(-drivetrainSimulator.getHeading().getDegrees());
     }
 

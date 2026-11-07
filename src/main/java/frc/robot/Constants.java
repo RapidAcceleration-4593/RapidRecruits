@@ -1,7 +1,20 @@
 package frc.robot;
 
+import com.revrobotics.spark.SparkMax;
+
+/**
+ * The Constants class for the robot project. Global, unchanging values go here.
+ *
+ * <p>This project uses one constants class, but larger projects may have several.
+ *
+ * <p>Important: NEVER place interface objects (e.g. {@link SparkMax}}) in a constants class because only one piece of
+ * code (usually a subsystem) should have access to it.
+ */
 public class Constants {
 
+    // We typically follow the pattern of dividing up groups of constants into
+    // subclasses, so that we only import what we need. It also keeps the code
+    // more organized.
     public static class Drivetrain {
         // 3 meters per second.
         public static final double kMaxSpeed = 3.0; // Meters per second

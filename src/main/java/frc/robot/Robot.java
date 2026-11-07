@@ -32,6 +32,7 @@ public class Robot extends TimedRobot {
 
     /** Called once at the beginning of the robot program. */
     public Robot() {
+        // A very simple path that the robot will follow in the autonomous period.
         trajectory = TrajectoryGenerator.generateTrajectory(
                 new Pose2d(2, 2, Rotation2d.kZero),
                 List.of(),
@@ -71,7 +72,8 @@ public class Robot extends TimedRobot {
         // negative values when we push forward.
         // Apply cosine compensation, which allows the robot to turn more easily
         // at high speeds.
-        double xSpeed = -speedLimiter.calculate(forwardControl * Math.cos(turnControl * 2 / Math.PI)) * Constants.Drivetrain.kMaxSpeed;
+        double xSpeed = -speedLimiter.calculate(forwardControl * Math.cos(turnControl * 2 / Math.PI))
+                * Constants.Drivetrain.kMaxSpeed;
 
         // Get the rate of angular rotation. We are inverting this because we want a
         // positive value when we pull to the left (remember, CCW is positive in
