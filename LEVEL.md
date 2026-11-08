@@ -1,6 +1,6 @@
 # Level 1.0 Differential Drivetrain
 
-In this level, you will debug a basic differential drivetrain.
+In this level, you will learn about a basic differential drivetrain.
 This level uses a TimedRobot architecture, in which there are no commands, only subsystems.
 Each subsystem's periodic method is called, along with the Robot's periodic.
 
