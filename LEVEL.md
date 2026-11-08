@@ -51,5 +51,5 @@ These are often less accurate on a frame by frame basis, but they don't drift ov
 To move on to the next level, execute the commands below:
 ```
 git restore .
-git checkout level-1.1
+git checkout level-1.3
 ```
