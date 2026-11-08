@@ -87,6 +87,9 @@ However, it is usually a bit of a wildcard and there is no easy rule for tuning.
 Try it, see if it improves dynamics.
 If it doesn't, set it to 0.
 
+## Important Files
+[Robot.java](./src/main/java/frc/robot/Robot.java)
+
 ## Instructions
 ### Part A. Setting Up the Sim
 1. Start a simulation.
@@ -137,3 +140,18 @@ The following instructions come from [controlcircuitry.com](https://controlcircu
 | Never quite reaches setpoint    | Increase Ki |
 | Sluggish after a disturbance    | Increase Ki, check for windup limits |
 | Erratic, noisy output           | Reduce or remove Kd |
+
+### Part C. Tuning Another Arm
+1. In `Robot.java`, change the constructor of `ArmSimulation sim` to `new ArmSimulation(encoder, motor, ArmSimulation.kAlternateParams)`
+This changes the behavior of the arm.
+
+2. Reset the PID constants.
+
+3. Repeat steps B1-4.
+
+## Next Section
+To move on to the next level, execute the commands below:
+```
+git restore .
+git checkout level-2.1
+```

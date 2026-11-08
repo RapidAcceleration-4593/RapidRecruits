@@ -22,6 +22,9 @@ public class ArmSimulation {
     public static final Parameters kDefaultParams =
             new Parameters(DCMotor.getNEO(2), 1.2, 10, 1, 0, Math.toRadians(90), true, 0);
 
+    public static final Parameters kAlternateParams =
+            new Parameters(DCMotor.getNeo550(4), 5.0, 30, 3, Math.toRadians(-90), Math.toRadians(90), true, 0);
+
     public static record Parameters(
             DCMotor gearbox,
             double moiJKgMetersSquared,
@@ -78,5 +81,9 @@ public class ArmSimulation {
         encoderSim.setDistance(armSim.getAngleRads());
         armMech.setAngle(new Rotation2d(armSim.getAngleRads()));
         SmartDashboard.putData("ArmMechanism", armDisplay);
+    }
+
+    public Parameters getParameters() {
+        return this.params;
     }
 }

@@ -12,15 +12,13 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-/** This is a sample program to demonstrate how to use a state-space controller to control an arm. */
 public class Robot extends TimedRobot {
     private final Encoder encoder = new Encoder(0, 1);
     private final SparkMax motor = new SparkMax(0, MotorType.kBrushless);
     private final PIDController pid = new PIDController(1, 0.0, 0.1);
     private final ArmSimulation sim = new ArmSimulation(encoder, motor);
-    private int position = 0;
+    private int position = -1;
 
     DoubleEntry kPEntry;
     DoubleEntry kIEntry;
@@ -42,7 +40,6 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-
         pid.setPID(kPEntry.get(), kIEntry.get(), kDEntry.get());
 
         int oldPos = position;
@@ -59,12 +56,13 @@ public class Robot extends TimedRobot {
         }
 
         if (oldPos != position) {
-            double setpoint = ((double) position) / 4 * Math.PI / 2;
+            var params = sim.getParameters();
+            double setpoint =
+                    params.minAngleRads() + ((double)position) / 4 * (params.maxAngleRads() - params.minAngleRads());
             pid.setSetpoint(setpoint);
         }
 
         double voltage = pid.calculate(encoder.getDistance()) * 12;
-        SmartDashboard.putNumber("EncoderReading", encoder.getDistance());
         motor.setVoltage(voltage);
     }
 
