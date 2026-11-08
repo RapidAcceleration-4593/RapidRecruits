@@ -69,7 +69,7 @@ public class Drivetrain {
         // We need to invert one side of the drivetrain so that positive voltages
         // result in both sides moving forward. Depending on how your robot's
         // gearbox is constructed, you might have to invert the left side instead.
-        SparkBaseConfig rightLeaderConfig = new SparkMaxConfig().inverted(true);
+        SparkBaseConfig rightLeaderConfig = new SparkMaxConfig().inverted(false);
 
         // There are four motors total: two leaders and two followers.
         // The following motors simply match the speed of the leaders.
@@ -102,7 +102,7 @@ public class Drivetrain {
         double leftOutput = leftPIDController.calculate(leftEncoder.getRate(), speeds.leftMetersPerSecond);
         double rightOutput = rightPIDController.calculate(rightEncoder.getRate(), speeds.rightMetersPerSecond);
 
-        leftLeader.setVoltage(leftOutput + leftFeedforward);
+        leftLeader.setVoltage(leftOutput + leftFeedforward)
         rightLeader.setVoltage(rightOutput + rightFeedforward);
     }
 

@@ -20,7 +20,7 @@ public class Constants {
         public static final double kMaxSpeed = 3.0; // Meters per second
 
         // 1/2 rotation per second.
-        public static final double kMaxAngularSpeed = Math.PI; // Radians per second
+        public final double kMaxAngularSpeed = Math.PI; // Radians per second
 
         public static final double kTrackWidth = 0.381 * 2;
         public static final double kWheelRadius = 0.0508;
