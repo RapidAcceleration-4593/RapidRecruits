@@ -9,8 +9,6 @@ In this level, you will debug the drivetrain we learned about in Level 1.0.
 
 [Constants.java](./src/main/java/frc/robot/Constants.java)
 
-[Main.java](./src/main/java/frc/robot/Main.java)
-
 **Note: Classes related to simulation will be clearly labeled (either by name or by package).
 Understanding simulation classes is not important for this course.**
 
