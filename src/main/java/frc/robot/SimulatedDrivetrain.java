@@ -40,7 +40,6 @@ public class SimulatedDrivetrain extends Drivetrain {
             .getStructTopic("SimulationPose", Pose2d.struct)
             .publish();
 
-
     /** Resets robot odometry. */
     public void resetOdometry(Pose2d pose) {
         super.resetOdometry(pose);
