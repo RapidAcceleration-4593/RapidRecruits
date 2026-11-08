@@ -1,7 +1,7 @@
 # Level 1.3 Building a Drivetrain
 
 In this level, you will finish writing the code for the Drivetrain class which has been partially deconstructed.
-It is strongly recommended that you **do not go back** and check your previous work.
+It is strongly recommended that you **do not go back** and check previous levels.
 That would defeat the purpose of the exercise, which is to struggle a little bit. 
 
 ## Important Files
