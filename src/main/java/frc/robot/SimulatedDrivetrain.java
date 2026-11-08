@@ -40,6 +40,14 @@ public class SimulatedDrivetrain extends Drivetrain {
             .getStructTopic("SimulationPose", Pose2d.struct)
             .publish();
 
+    private double prevLeftVelocity = 0;
+    private double prevRightVelocity = 0;
+    private boolean shouldSimulateSlip;
+
+    public SimulatedDrivetrain(boolean simulateSlip) {
+        shouldSimulateSlip = simulateSlip;
+    }
+
     /** Resets robot odometry. */
     public void resetOdometry(Pose2d pose) {
         super.resetOdometry(pose);
@@ -65,22 +73,43 @@ public class SimulatedDrivetrain extends Drivetrain {
         leftLeaderSim.iterate(leftWheelRotationsRPM, RobotController.getBatteryVoltage(), 0.02);
         rightLeaderSim.iterate(rightWheelRotationsRPM, RobotController.getBatteryVoltage(), 0.02);
 
+        double prevLeftPosition = drivetrainSimulator.getLeftPositionMeters();
+        double prevRightPosition = drivetrainSimulator.getRightPositionMeters();
+
         drivetrainSimulator.setInputs(
                 leftLeaderSim.getAppliedOutput() * RobotController.getBatteryVoltage() * leftInversionFactor,
                 rightLeaderSim.getAppliedOutput() * RobotController.getBatteryVoltage() * rightInversionFactor);
         drivetrainSimulator.update(0.02);
 
-        leftEncoderSim.setDistance(drivetrainSimulator.getLeftPositionMeters() * leftInversionFactor);
+        double leftPosDelta = drivetrainSimulator.getLeftPositionMeters() - prevLeftPosition;
+        double rightPosDelta = drivetrainSimulator.getRightPositionMeters() - prevRightPosition;
+
+        double leftEncoderSlipFactor = calculateSlip(drivetrainSimulator.getLeftVelocityMetersPerSecond(), prevLeftVelocity);
+        double rightEncoderSlipFactor = calculateSlip(drivetrainSimulator.getRightVelocityMetersPerSecond(), prevRightVelocity);
+
+        leftEncoderSim.setDistance((prevLeftPosition + leftPosDelta * leftEncoderSlipFactor) * leftInversionFactor);
         leftEncoderSim.setRate(drivetrainSimulator.getLeftVelocityMetersPerSecond() * leftInversionFactor);
-        rightEncoderSim.setDistance(drivetrainSimulator.getRightPositionMeters() * rightInversionFactor);
+        rightEncoderSim.setDistance((prevRightPosition + rightPosDelta * rightEncoderSlipFactor) * rightInversionFactor);
         rightEncoderSim.setRate(drivetrainSimulator.getRightVelocityMetersPerSecond() * rightInversionFactor);
         gyroSim.setAngle(-drivetrainSimulator.getHeading().getDegrees());
+
+        prevLeftVelocity = drivetrainSimulator.getLeftVelocityMetersPerSecond();
+        prevRightVelocity = drivetrainSimulator.getRightVelocityMetersPerSecond();
     }
 
     /** Update odometry - this should be run every robot loop. */
     public void periodic() {
         super.periodic();
         simPosePub.set(drivetrainSimulator.getPose());
+    }
+
+    private double calculateSlip(double velocity, double prevVelocity) {
+        if (!shouldSimulateSlip) return 1.0;
+
+        if (Math.abs(prevLeftVelocity -  velocity) / 0.02 > 0.1) {
+            return 1 + Math.random() * 3;
+        }
+        return 1.0;
     }
 
     private double calculateMotorRPM(double wheelTangentalVelocity) {

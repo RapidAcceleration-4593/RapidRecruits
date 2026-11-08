@@ -26,7 +26,7 @@ public class Robot extends TimedRobot {
     private final SlewRateLimiter speedLimiter = new SlewRateLimiter(3);
     private final SlewRateLimiter rotLimiter = new SlewRateLimiter(3);
 
-    private final SimulatedDrivetrain drive = new SimulatedDrivetrain();
+    private final SimulatedDrivetrain drive = new SimulatedDrivetrain(false);
     private final LTVUnicycleController feedback = new LTVUnicycleController(0.020);
     private final Timer timer = new Timer();
     private final Trajectory trajectory;
