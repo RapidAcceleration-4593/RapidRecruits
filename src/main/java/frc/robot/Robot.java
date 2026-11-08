@@ -7,6 +7,8 @@ package frc.robot;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.networktables.DoubleEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
@@ -20,16 +22,29 @@ public class Robot extends TimedRobot {
     private final ArmSimulation sim = new ArmSimulation(encoder, motor);
     private int position = 0;
 
+    DoubleEntry kPEntry;
+    DoubleEntry kIEntry;
+    DoubleEntry kDEntry;
+
     // A joystick to read the trigger from.
     private final XboxController controller = new XboxController(0);
 
     public Robot() {
         // We go 2 pi radians in 1 rotation, or 4096 counts.
         encoder.setDistancePerPulse(Math.PI * 2 / 4096.0);
+        kPEntry = NetworkTableInstance.getDefault().getDoubleTopic("Tuning/kP").getEntry(0);
+        kIEntry = NetworkTableInstance.getDefault().getDoubleTopic("Tuning/kI").getEntry(0);
+        kDEntry = NetworkTableInstance.getDefault().getDoubleTopic("Tuning/kD").getEntry(0);
+        kPEntry.setDefault(0);
+        kIEntry.setDefault(0);
+        kDEntry.setDefault(0);
     }
 
     @Override
     public void teleopPeriodic() {
+
+        pid.setPID(kPEntry.get(), kIEntry.get(), kDEntry.get());
+
         int oldPos = position;
         if (controller.getAButton()) {
             position = 1;
