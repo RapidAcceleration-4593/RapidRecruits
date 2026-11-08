@@ -4,44 +4,22 @@
 
 package frc.robot;
 
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.networktables.DoubleEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 
 public class Robot extends TimedRobot {
-    private final Encoder encoder = new Encoder(0, 1);
-    private final SparkMax motor = new SparkMax(0, MotorType.kBrushless);
-    private final PIDController pid = new PIDController(1, 0.0, 0.1);
-    private final ArmSimulation sim = new ArmSimulation(encoder, motor);
     private int position = -1;
-
-    DoubleEntry kPEntry;
-    DoubleEntry kIEntry;
-    DoubleEntry kDEntry;
+    private ArmSubsystem arm;
 
     // A joystick to read the trigger from.
     private final XboxController controller = new XboxController(0);
 
     public Robot() {
-        // We go 2 pi radians in 1 rotation, or 4096 counts.
-        encoder.setDistancePerPulse(Math.PI * 2 / 4096.0);
-        kPEntry = NetworkTableInstance.getDefault().getDoubleTopic("Tuning/kP").getEntry(0);
-        kIEntry = NetworkTableInstance.getDefault().getDoubleTopic("Tuning/kI").getEntry(0);
-        kDEntry = NetworkTableInstance.getDefault().getDoubleTopic("Tuning/kD").getEntry(0);
-        kPEntry.setDefault(0);
-        kIEntry.setDefault(0);
-        kDEntry.setDefault(0);
+        arm = new ArmSubsystem();
     }
 
     @Override
     public void teleopPeriodic() {
-        pid.setPID(kPEntry.get(), kIEntry.get(), kDEntry.get());
-
         int oldPos = position;
         if (controller.getAButton()) {
             position = 1;
@@ -56,18 +34,17 @@ public class Robot extends TimedRobot {
         }
 
         if (oldPos != position) {
-            var params = sim.getParameters();
+            var params = ArmSimulation.kDefaultParams; 
             double setpoint =
                     params.minAngleRads() + ((double)position) / 4 * (params.maxAngleRads() - params.minAngleRads());
-            pid.setSetpoint(setpoint);
+            arm.setSetpoint(setpoint);
         }
 
-        double voltage = pid.calculate(encoder.getDistance()) * 12;
-        motor.setVoltage(voltage);
+        arm.periodic();
     }
 
     @Override
     public void simulationPeriodic() {
-        sim.simulationPeriodic();
+        arm.simulationPeriodic();
     }
 }
