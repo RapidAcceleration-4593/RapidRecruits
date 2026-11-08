@@ -21,8 +21,6 @@ If it is driving at maximum speed, than one motor cannot drive slower than the o
 
 [Constants.java](./src/main/java/frc/robot/Constants.java)
 
-[Main.java](./src/main/java/frc/robot/Main.java)
-
 **Note: Classes related to simulation will be clearly labeled (either by name or by package).
 Understanding simulation classes is not important for this course.**
 
