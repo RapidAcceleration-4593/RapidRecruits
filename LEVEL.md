@@ -1,4 +1,4 @@
-# Level 1.1 Differential Drivetrain
+# Level 1.0 Differential Drivetrain
 
 In this level, you will debug a basic differential drivetrain.
 This level uses a TimedRobot architecture, in which there are no commands, only subsystems.
@@ -103,3 +103,10 @@ How might this relate to cosine compensation?
 
 These examples demonstrate the importance of properly tuning physical constants to match reality.
 Setting the maximum speed to 100 m/s doesn't mean it will drive that fast!
+
+## Next Section
+To move on to the next level, execute the commands below:
+```
+git restore .
+git checkout level-1.1
+```
