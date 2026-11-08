@@ -15,10 +15,13 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.Encoder;
 
@@ -55,6 +58,11 @@ public class Drivetrain {
 
     // Motor feedforwards predict how much voltage will be needed to reach a certain motor velocity.
     private final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV);
+
+    // A publisher allows us to send data over Network Tables to AdvantageScope.
+    private final StructPublisher<Pose2d> estimatedPosePub = NetworkTableInstance.getDefault()
+            .getStructTopic("EstimatedPose", Pose2d.struct)
+            .publish();
 
     /** Subsystem constructor. */
     public Drivetrain() {
@@ -115,7 +123,10 @@ public class Drivetrain {
 
     /** Resets robot odometry. */
     public void resetOdometry(Pose2d pose) {
-        odometry.resetPosition(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance(), pose);
+        leftEncoder.reset();
+        rightEncoder.reset();
+        gyro.reset();
+        odometry.resetPosition(Rotation2d.kZero, 0, 0, pose);
     }
 
     /** Check the current robot pose. */
@@ -126,5 +137,6 @@ public class Drivetrain {
     /** Update odometry - this should be run every robot loop. */
     public void periodic() {
         updateOdometry();
+        estimatedPosePub.set(odometry.getPoseMeters());
     }
 }

@@ -8,6 +8,7 @@ import edu.wpi.first.math.controller.LTVUnicycleController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
@@ -30,14 +31,18 @@ public class Robot extends TimedRobot {
     private final Timer timer = new Timer();
     private final Trajectory trajectory;
 
+    private Pose2d initialPose = new Pose2d(2, 2, Rotation2d.kZero);
+
     /** Called once at the beginning of the robot program. */
     public Robot() {
         // A very simple path that the robot will follow in the autonomous period.
         trajectory = TrajectoryGenerator.generateTrajectory(
-                new Pose2d(2, 2, Rotation2d.kZero),
-                List.of(),
+                initialPose,
+                List.of(new Translation2d(-1, -1)),
                 new Pose2d(6, 4, Rotation2d.kZero),
                 new TrajectoryConfig(2, 2));
+
+        drive.resetOdometry(initialPose);
     }
 
     @Override
@@ -48,7 +53,7 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         timer.restart();
-        drive.resetOdometry(trajectory.getInitialPose());
+        drive.resetOdometry(initialPose);
     }
 
     @Override
