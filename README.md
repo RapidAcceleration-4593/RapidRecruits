@@ -41,7 +41,9 @@ This would make it jitter significantly.
 Instead, we could make the motor voltage higher the farther away it is from the setpoint.
 That way, it would quickly drive most of the way, then slowly come to rest on the setpoint.
 This is called **proportional gain**, and is P in PID.
-The math is simple: $$voltage = K_p \times error$$
+
+The math is simple: voltage = Kp times error.
+
 It would seem that we would want to set Kp as high as possible.
 That way the arm could shoot as quickly as possible over to the setpoint before coming gracefully to a rest.
 Except momentum exists.
@@ -86,3 +88,52 @@ Try it, see if it improves dynamics.
 If it doesn't, set it to 0.
 
 ## Instructions
+### Part A. Setting Up the Sim
+1. Start a simulation.
+
+2. In AdvantageScope, open up the Mechanisms tab.
+Drag and drop "SmartDashboard/ArmMechanism" onto the Mechanisms panel.
+
+3. Connect a controller and enable.
+Press the button Y.
+Nothing should happen.
+
+4. Open up Elastic.
+Go to settings and make sure that the ip is set to **localhost**.
+It should connect to the simulation.
+
+5. In Elastic, click Add Widget.
+In the hierarchy menu, find the Tuning folder and drag and drop kP, kI, and kD onto the grid.
+
+6. Set kP to 1 and press enter.
+Depending on if you are using Driver Station or the Sim GUI, the robot may disable and you will have to re-enable.
+
+7. Press and hold Y again.
+What happened?
+
+8. Press and hold A, X, and B in turn.
+Get a feel for where each setpoint is supposed to be.
+
+
+### Part B. Tuning the Arm
+Next, tune the PID until the arm is able to quickly and smoothly reach all setpoints with minimal oscillation.
+The following instructions come from [controlcircuitry.com](https://controlcircuitry.com/pid-controller-tuning-explained-with-examples/#Common_PID_Tuning_Methods).
+
+1. Set Ki and Kd to zero.
+
+2. Increase Kp until the loop responds quickly with a small, acceptable overshoot.
+
+3. Increase Ki gradually until steady-state error is eliminated, watching for oscillation.
+
+4. Add Kd if overshoot or ringing is still a problem, particularly on slow thermal processes.
+
+#### Symptom Adjustment
+
+| Problem                         | Solution |
+| -------                         | -------- |
+| Slow response, no oscillation   | Increase Kp |
+| Oscillation, won’t settle       | Decrease Kp, or add/increase Kd |
+| Reaches setpoint but overshoots | Add or increase Kd, or slightly reduce Ki |
+| Never quite reaches setpoint    | Increase Ki |
+| Sluggish after a disturbance    | Increase Ki, check for windup limits |
+| Erratic, noisy output           | Reduce or remove Kd |
