@@ -1,5 +1,6 @@
 package frc.robot;
 
+import com.revrobotics.sim.SparkAbsoluteEncoderSim;
 import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -8,8 +9,6 @@ import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.simulation.EncoderSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
@@ -43,13 +42,13 @@ public class ArmSimulation {
     private final MechanismLigament2d armMech;
 
     private final SparkMaxSim sparkSim;
-    private final EncoderSim encoderSim;
+    private final SparkAbsoluteEncoderSim encoderSim;
 
-    public ArmSimulation(Encoder encoder, SparkMax sparkMax) {
-        this(encoder, sparkMax, kDefaultParams);
+    public ArmSimulation(SparkMax sparkMax) {
+        this(sparkMax, kDefaultParams);
     }
 
-    public ArmSimulation(Encoder encoder, SparkMax sparkMax, Parameters params) {
+    public ArmSimulation(SparkMax sparkMax, Parameters params) {
         this.params = params;
         LinearSystem<N2, N1, N2> armPlant =
                 LinearSystemId.createSingleJointedArmSystem(params.gearbox, params.moiJKgMetersSquared, params.gearing);
@@ -69,18 +68,18 @@ public class ArmSimulation {
         armMech = new MechanismLigament2d("Arm", 70, params.minAngleRads, 10, new Color8Bit(255, 255, 255));
         armRoot.append(armMech);
         sparkSim = new SparkMaxSim(sparkMax, params.gearbox);
-        encoderSim = new EncoderSim(encoder);
+        encoderSim = sparkSim.getAbsoluteEncoderSim();
     }
 
     public void simulationPeriodic() {
         double railVoltage = RoboRioSim.getVInVoltage();
-        double velocityRPM = armSim.getVelocityRadPerSec() * params.gearing * 60 / 2 / Math.PI;
-        sparkSim.iterate(velocityRPM, railVoltage, 0.02);
+        double velocity = armSim.getVelocityRadPerSec();
+        sparkSim.iterate(velocity, railVoltage, 0.02);
         armSim.setInputVoltage(sparkSim.getAppliedOutput() * railVoltage);
         armSim.update(0.02);
-        encoderSim.setDistance(armSim.getAngleRads());
         armMech.setAngle(new Rotation2d(armSim.getAngleRads()));
         SmartDashboard.putData("ArmMechanism", armDisplay);
+        SmartDashboard.putNumber("EncoderDistance", encoderSim.getPosition());
     }
 
     public Parameters getParameters() {

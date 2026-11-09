@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends TimedRobot {
     private int position = -1;
@@ -34,9 +35,10 @@ public class Robot extends TimedRobot {
         }
 
         if (oldPos != position) {
-            var params = ArmSimulation.kDefaultParams; 
+            var params = ArmSimulation.kDefaultParams;
             double setpoint =
-                    params.minAngleRads() + ((double)position) / 4 * (params.maxAngleRads() - params.minAngleRads());
+                    params.minAngleRads() + ((double) position) / 4 * (params.maxAngleRads() - params.minAngleRads());
+            SmartDashboard.putNumber("Target", setpoint * 180 / Math.PI);
             arm.setSetpoint(setpoint);
         }
 

@@ -1,4 +1,4 @@
-# Level 2.1 Creating an Arm Subsystem 
+# Level 2.1 Creating an Arm Subsystem
 
 In this lesson, you write an arm subsystem which uses a PID controller to drive a motor.
 
