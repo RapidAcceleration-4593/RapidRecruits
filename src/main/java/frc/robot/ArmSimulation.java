@@ -43,12 +43,14 @@ public class ArmSimulation {
 
     private final SparkMaxSim sparkSim;
     private final SparkAbsoluteEncoderSim encoderSim;
+    private final double encoderToArmGearing;
 
-    public ArmSimulation(SparkMax sparkMax) {
-        this(sparkMax, kDefaultParams);
+    public ArmSimulation(SparkMax sparkMax, double encoderToArmGearing) {
+        this(sparkMax, encoderToArmGearing, kDefaultParams);
     }
 
-    public ArmSimulation(SparkMax sparkMax, Parameters params) {
+    public ArmSimulation(SparkMax sparkMax, double encoderToArmGearing, Parameters params) {
+        this.encoderToArmGearing = encoderToArmGearing;
         this.params = params;
         LinearSystem<N2, N1, N2> armPlant =
                 LinearSystemId.createSingleJointedArmSystem(params.gearbox, params.moiJKgMetersSquared, params.gearing);
@@ -73,7 +75,7 @@ public class ArmSimulation {
 
     public void simulationPeriodic() {
         double railVoltage = RoboRioSim.getVInVoltage();
-        double velocity = armSim.getVelocityRadPerSec();
+        double velocity = armSim.getVelocityRadPerSec() * encoderToArmGearing;
         sparkSim.iterate(velocity, railVoltage, 0.02);
         armSim.setInputVoltage(sparkSim.getAppliedOutput() * railVoltage);
         armSim.update(0.02);

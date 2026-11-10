@@ -13,16 +13,19 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 public class ArmSubsystem {
+    public static final double kEncoderToArmGearing = 1;
 
     private final ArmSimulation.Parameters params = ArmSimulation.kDefaultParams;
     private final ArmSimulation sim;
     private final SparkMax motor = new SparkMax(0, MotorType.kBrushless);
     private final SparkClosedLoopController controller = motor.getClosedLoopController();
-    private double Kp = 10;
-    private double Ki = 0;
-    private double Kd = 1;
-    private double kPositionConversionFactor = 2 * Math.PI; // Converts rotations to radians
-    private double kVelocityConversionFactor = 2 * Math.PI / 60; // Converts RPM to rad/s
+    private double Kp = 10 / kEncoderToArmGearing;
+    private double Ki = 0 / kEncoderToArmGearing;
+    private double Kd = 1 / kEncoderToArmGearing;
+    private double kPositionConversionFactor =
+            2 * Math.PI * kEncoderToArmGearing; // Converts encoder rotations to arm radians
+    private double kVelocityConversionFactor =
+            2 * Math.PI / 60 * kEncoderToArmGearing; // Converts encoder RPM to arm rad/s
 
     public ArmSubsystem() {
         SparkBaseConfig config = new SparkMaxConfig()
@@ -34,11 +37,11 @@ public class ArmSubsystem {
 
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        sim = new ArmSimulation(motor);
+        sim = new ArmSimulation(motor, kEncoderToArmGearing);
     }
 
     public void setSetpoint(double setpoint) {
-        controller.setSetpoint(setpoint, ControlType.kPosition);
+        controller.setSetpoint(setpoint * kEncoderToArmGearing, ControlType.kPosition);
     }
 
     public void periodic() {}
