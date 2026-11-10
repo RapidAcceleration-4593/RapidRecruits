@@ -37,7 +37,7 @@ public class ArmSubsystem {
 
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        sim = new ArmSimulation(motor, kEncoderToArmGearing);
+        sim = new ArmSimulation(motor, kEncoderToArmGearing, params);
     }
 
     public void setSetpoint(double setpoint) {
