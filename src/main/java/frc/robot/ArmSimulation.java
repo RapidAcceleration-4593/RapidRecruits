@@ -19,14 +19,14 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 
 public class ArmSimulation {
     public static final Parameters kDefaultParams =
-            new Parameters(DCMotor.getNEO(2), 1.2, 10, 1, 0, Math.toRadians(90), true, 0);
+            new Parameters(DCMotor.getNEO(2), 1.2, 10, 1, Math.toRadians(-90), Math.toRadians(90), true, 0);
 
     public static final Parameters kAlternateParams =
             new Parameters(DCMotor.getNeo550(4), 5.0, 30, 3, Math.toRadians(-90), Math.toRadians(90), true, 0);
 
     public static record Parameters(
             DCMotor gearbox,
-            double moiJKgMetersSquared,
+            double moiKgMetersSquared,
             double gearing,
             double armLengthMeters,
             double minAngleRads,
@@ -53,7 +53,7 @@ public class ArmSimulation {
         this.encoderToArmGearing = encoderToArmGearing;
         this.params = params;
         LinearSystem<N2, N1, N2> armPlant =
-                LinearSystemId.createSingleJointedArmSystem(params.gearbox, params.moiJKgMetersSquared, params.gearing);
+                LinearSystemId.createSingleJointedArmSystem(params.gearbox, params.moiKgMetersSquared, params.gearing);
 
         armSim = new SingleJointedArmSim(
                 armPlant,
@@ -75,13 +75,17 @@ public class ArmSimulation {
 
     public void simulationPeriodic() {
         double railVoltage = RoboRioSim.getVInVoltage();
-        double velocity = armSim.getVelocityRadPerSec() * encoderToArmGearing;
-        sparkSim.iterate(velocity, railVoltage, 0.02);
         armSim.setInputVoltage(sparkSim.getAppliedOutput() * railVoltage);
         armSim.update(0.02);
+
         armMech.setAngle(new Rotation2d(armSim.getAngleRads()));
+
+        double velocity = armSim.getVelocityRadPerSec() * encoderToArmGearing;
+        sparkSim.iterate(velocity, railVoltage, 0.02);
+
         SmartDashboard.putData("ArmMechanism", armDisplay);
         SmartDashboard.putNumber("EncoderDistance", encoderSim.getPosition());
+        SmartDashboard.putNumber("SparkAppliedOutput", sparkSim.getAppliedOutput());
     }
 
     public Parameters getParameters() {

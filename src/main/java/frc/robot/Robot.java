@@ -4,23 +4,42 @@
 
 package frc.robot;
 
+import edu.wpi.first.networktables.BooleanEntry;
+import edu.wpi.first.networktables.DoubleEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends TimedRobot {
     private int position = -1;
     private ArmSubsystem arm;
+    private DoubleEntry voltageEntry =
+            NetworkTableInstance.getDefault().getDoubleTopic("Tuning/Voltage").getEntry(0);
+    private BooleanEntry manualModeEntry = NetworkTableInstance.getDefault()
+            .getBooleanTopic("Tuning/ManualMode")
+            .getEntry(false);
 
     // A joystick to read the trigger from.
     private final XboxController controller = new XboxController(0);
 
     public Robot() {
         arm = new ArmSubsystem();
+        voltageEntry.setDefault(0);
+        manualModeEntry.set(false);
     }
 
     @Override
     public void teleopPeriodic() {
+        boolean shouldRunManual = manualModeEntry.get();
+        if (shouldRunManual) {
+            runVoltageControl();
+        } else {
+            runSetpointControl();
+        }
+        arm.periodic();
+    }
+
+    private void runSetpointControl() {
         int oldPos = position;
         if (controller.getAButton()) {
             position = 1;
@@ -35,14 +54,16 @@ public class Robot extends TimedRobot {
         }
 
         if (oldPos != position) {
-            var params = ArmSimulation.kDefaultParams;
+            var params = arm.params;
             double setpoint =
                     params.minAngleRads() + ((double) position) / 4 * (params.maxAngleRads() - params.minAngleRads());
-            SmartDashboard.putNumber("Target", setpoint * 180 / Math.PI);
             arm.setSetpoint(setpoint);
         }
+    }
 
-        arm.periodic();
+    private void runVoltageControl() {
+        double voltage = voltageEntry.get();
+        arm.setVoltage(voltage);
     }
 
     @Override
