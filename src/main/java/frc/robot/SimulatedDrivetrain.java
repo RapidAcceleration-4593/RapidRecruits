@@ -1,9 +1,9 @@
 package frc.robot;
 
-import static frc.robot.Constants.Drivetrain.*;
-import static frc.robot.Constants.Drivetrain.gyroId;
-import static frc.robot.Constants.Drivetrain.leftEncoderAId;
-import static frc.robot.Constants.Drivetrain.rightEncoderAId;
+import static frc.robot.Constants.DrivetrainConstants.*;
+import static frc.robot.Constants.DrivetrainConstants.gyroId;
+import static frc.robot.Constants.DrivetrainConstants.leftEncoderAId;
+import static frc.robot.Constants.DrivetrainConstants.rightEncoderAId;
 
 import com.revrobotics.sim.SparkMaxSim;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -17,13 +17,15 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.AnalogGyroSim;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.simulation.EncoderSim;
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.DrivetrainSubsystem;
 
 /**
- * A {@link Drivetrain} with simulation support. Understanding simulation is not important for this activity.
+ * A {@link DrivetrainSubsystem} with simulation support. Understanding simulation is not important for this activity.
  *
- * @see Drivetrain
+ * @see DrivetrainSubsystem
  */
-public class SimulatedDrivetrain extends Drivetrain {
+public class SimulatedDrivetrain extends DrivetrainSubsystem {
     // Simulation classes help us simulate our robot
     private final AnalogGyroSim gyroSim = new AnalogGyroSim(gyroId);
     private final EncoderSim leftEncoderSim = EncoderSim.createForChannel(leftEncoderAId);
@@ -41,9 +43,8 @@ public class SimulatedDrivetrain extends Drivetrain {
             .publish();
 
     /** Resets robot odometry. */
-    public void resetOdometry(Pose2d pose) {
-        super.resetOdometry(pose);
-        drivetrainSimulator.setPose(pose);
+    public Command resetOdometry(Pose2d pose) {
+        return super.resetOdometry(pose).andThen(() -> drivetrainSimulator.setPose(pose));
     }
 
     /** Update our simulation. This should be run every robot loop in simulation. */

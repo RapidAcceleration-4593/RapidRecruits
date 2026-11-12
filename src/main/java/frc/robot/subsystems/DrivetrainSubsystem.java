@@ -2,9 +2,9 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot;
+package frc.robot.subsystems;
 
-import static frc.robot.Constants.Drivetrain.*;
+import static frc.robot.Constants.DrivetrainConstants.*;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
@@ -24,9 +24,14 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 /** A simple differential drivetrain that can be extended with simulation capabilities. */
-public class Drivetrain {
+public class DrivetrainSubsystem extends SubsystemBase {
     // Protected modifiers allow subclasses to access fields.
     // We do this to allow the simulation class to modify the motors.
     // SparkMaxes are motor controllers.
@@ -39,13 +44,16 @@ public class Drivetrain {
     private final Encoder leftEncoder = new Encoder(leftEncoderAId, leftEncoderBId);
     private final Encoder rightEncoder = new Encoder(rightEncoderAId, rightEncoderBId);
 
+    // A gyro measures the robot's orientation on the field.
+    private final AnalogGyro gyro = new AnalogGyro(gyroId);
+
     // PID controllers allow for feedback control: changing how fast we drive the motor
     // depending on how close we are to the setpoint.
     private final PIDController leftPIDController = new PIDController(kP, kI, kD);
     private final PIDController rightPIDController = new PIDController(kP, kI, kD);
 
-    // A gyro measures the robot's orientation on the field.
-    private final AnalogGyro gyro = new AnalogGyro(gyroId);
+    // Motor feedforwards predict how much voltage will be needed to reach a certain motor velocity.
+    private final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV);
 
     // The kinematics describe the physical properties of the robot.
     // They help us predict how it will move.
@@ -56,16 +64,13 @@ public class Drivetrain {
     private final DifferentialDriveOdometry odometry =
             new DifferentialDriveOdometry(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
 
-    // Motor feedforwards predict how much voltage will be needed to reach a certain motor velocity.
-    private final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV);
-
     // A publisher allows us to send data over Network Tables to AdvantageScope.
     private final StructPublisher<Pose2d> estimatedPosePub = NetworkTableInstance.getDefault()
             .getStructTopic("EstimatedPose", Pose2d.struct)
             .publish();
 
     /** Subsystem constructor. */
-    public Drivetrain() {
+    public DrivetrainSubsystem() {
         // We need to invert one side of the drivetrain so that positive voltages
         // result in both sides moving forward. Depending on how your robot's
         // gearbox is constructed, you might have to invert the left side instead.
@@ -93,8 +98,18 @@ public class Drivetrain {
         rightEncoder.reset();
     }
 
+    /**
+     * Sets speeds to the drivetrain motors using arcade drive format.
+     *
+     * @param xSpeed the speed for the x axis
+     * @param rot the rotation
+     */
+    private void setSpeeds(double xSpeed, double rot) {
+        setSpeeds(kinematics.toWheelSpeeds(new ChassisSpeeds(xSpeed, 0, rot)));
+    }
+
     /** Sets speeds to the drivetrain motors. */
-    public void setSpeeds(DifferentialDriveWheelSpeeds speeds) {
+    private void setSpeeds(DifferentialDriveWheelSpeeds speeds) {
         // Use feedforward and feedback mechanisms to calculate how much voltage we need
         // to reach the setpoint.
         final double leftFeedforward = feedforward.calculate(speeds.leftMetersPerSecond);
@@ -106,27 +121,29 @@ public class Drivetrain {
         rightLeader.setVoltage(rightOutput + rightFeedforward);
     }
 
-    /**
-     * Controls the robot using arcade drive.
-     *
-     * @param xSpeed the speed for the x axis
-     * @param rot the rotation
-     */
-    public void drive(double xSpeed, double rot) {
-        setSpeeds(kinematics.toWheelSpeeds(new ChassisSpeeds(xSpeed, 0, rot)));
-    }
-
     /** Update robot odometry. */
-    public void updateOdometry() {
+    private void updateOdometry() {
         odometry.update(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
     }
 
+    public Command drive(DoubleSupplier driveSupplier, DoubleSupplier turnSupplier) {
+        return run(() -> setSpeeds(driveSupplier.getAsDouble(), turnSupplier.getAsDouble()));
+    }
+
+    public Command drive(Supplier<DifferentialDriveWheelSpeeds> wheelSpeeds) {
+        return run(() -> setSpeeds(wheelSpeeds.get()));
+    }
+
     /** Resets robot odometry. */
-    public void resetOdometry(Pose2d pose) {
-        leftEncoder.reset();
-        rightEncoder.reset();
-        gyro.reset();
-        odometry.resetPosition(Rotation2d.kZero, 0, 0, pose);
+    public Command resetOdometry(Pose2d pose) {
+        return new InstantCommand(
+                () -> {
+                    leftEncoder.reset();
+                    rightEncoder.reset();
+                    gyro.reset();
+                    odometry.resetPosition(Rotation2d.kZero, 0, 0, pose);
+                },
+                this);
     }
 
     /** Check the current robot pose. */

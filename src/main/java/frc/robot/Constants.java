@@ -12,10 +12,14 @@ import com.revrobotics.spark.SparkMax;
  */
 public class Constants {
 
+    public static class OperatorConstants {
+        public static int kDriverControllerPort = 0;
+    }
+
     // We typically follow the pattern of dividing up groups of constants into
     // subclasses, so that we only import what we need. It also keeps the code
     // more organized.
-    public static class Drivetrain {
+    public static class DrivetrainConstants {
         // 3 meters per second.
         public static final double kMaxSpeed = 3.0; // Meters per second
 
