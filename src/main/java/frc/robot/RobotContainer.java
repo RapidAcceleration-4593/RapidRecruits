@@ -13,7 +13,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
-import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.sim.SimulatedDrivetrain;
+import frc.robot.subsystems.Drivetrain;
 import java.util.function.DoubleSupplier;
 
 /**
@@ -23,13 +24,18 @@ import java.util.function.DoubleSupplier;
  */
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
-    private final DrivetrainSubsystem drivetrain = new DrivetrainSubsystem();
+    private final Drivetrain drivetrain;
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
     private final CommandXboxController controller = new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
+        if (Robot.isReal()) {
+            drivetrain = new Drivetrain();
+        } else {
+            drivetrain = new SimulatedDrivetrain();
+        }
         // Configure the trigger bindings
         configureBindings();
     }

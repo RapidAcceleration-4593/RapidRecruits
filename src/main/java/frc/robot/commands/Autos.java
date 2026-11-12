@@ -7,12 +7,12 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.subsystems.Drivetrain;
 import java.util.List;
 
 public class Autos {
 
-    public static Command basicAuto(DrivetrainSubsystem drivetrain) {
+    public static Command basicAuto(Drivetrain drivetrain) {
         Pose2d startPose = new Pose2d(2, 2, Rotation2d.kZero);
         Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
                 startPose,

@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.sim;
 
 import static frc.robot.Constants.DrivetrainConstants.*;
 import static frc.robot.Constants.DrivetrainConstants.gyroId;
@@ -18,14 +18,14 @@ import edu.wpi.first.wpilibj.simulation.AnalogGyroSim;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.simulation.EncoderSim;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.subsystems.Drivetrain;
 
 /**
- * A {@link DrivetrainSubsystem} with simulation support. Understanding simulation is not important for this activity.
+ * A {@link Drivetrain} with simulation support. Understanding simulation is not important for this activity.
  *
- * @see DrivetrainSubsystem
+ * @see Drivetrain
  */
-public class SimulatedDrivetrain extends DrivetrainSubsystem {
+public class SimulatedDrivetrain extends Drivetrain {
     // Simulation classes help us simulate our robot
     private final AnalogGyroSim gyroSim = new AnalogGyroSim(gyroId);
     private final EncoderSim leftEncoderSim = EncoderSim.createForChannel(leftEncoderAId);

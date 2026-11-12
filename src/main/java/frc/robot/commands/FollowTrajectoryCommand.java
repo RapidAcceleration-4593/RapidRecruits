@@ -7,11 +7,11 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
-import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.subsystems.Drivetrain;
 
 public class FollowTrajectoryCommand extends ParallelRaceGroup {
 
-    private DrivetrainSubsystem drive;
+    private Drivetrain drive;
     private Trajectory trajectory;
     private Timer timer = new Timer();
     private LTVUnicycleController feedback = new LTVUnicycleController(0.020);
@@ -19,14 +19,14 @@ public class FollowTrajectoryCommand extends ParallelRaceGroup {
     private double driveSpeed = 0;
     private double turnSpeed = 0;
 
-    public FollowTrajectoryCommand(DrivetrainSubsystem drive, Trajectory trajectory) {
+    public FollowTrajectoryCommand(Drivetrain drive, Trajectory trajectory) {
         this.drive = drive;
         this.trajectory = trajectory;
         addCommands(calculateTrajectory(), drive.drive(this::getDriveSpeed, this::getTurnSpeed));
     }
 
     public void calcInit() {
-        timer.reset();
+        timer.restart();
     }
 
     private void calcExec() {
@@ -37,8 +37,12 @@ public class FollowTrajectoryCommand extends ParallelRaceGroup {
         turnSpeed = speeds.omegaRadiansPerSecond;
     }
 
+    private boolean calcIsFinished() {
+        return timer.get() > trajectory.getTotalTimeSeconds();
+    }
+
     private Command calculateTrajectory() {
-        return Commands.runOnce(this::calcInit).andThen(Commands.run(this::calcExec));
+        return Commands.runOnce(this::calcInit).andThen(Commands.run(this::calcExec)).until(this::calcIsFinished);
     }
 
     private double getDriveSpeed() {

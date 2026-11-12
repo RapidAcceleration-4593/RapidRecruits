@@ -31,7 +31,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 /** A simple differential drivetrain that can be extended with simulation capabilities. */
-public class DrivetrainSubsystem extends SubsystemBase {
+public class Drivetrain extends SubsystemBase {
     // Protected modifiers allow subclasses to access fields.
     // We do this to allow the simulation class to modify the motors.
     // SparkMaxes are motor controllers.
@@ -70,7 +70,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
             .publish();
 
     /** Subsystem constructor. */
-    public DrivetrainSubsystem() {
+    public Drivetrain() {
         // We need to invert one side of the drivetrain so that positive voltages
         // result in both sides moving forward. Depending on how your robot's
         // gearbox is constructed, you might have to invert the left side instead.
