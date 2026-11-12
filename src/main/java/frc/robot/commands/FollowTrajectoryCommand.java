@@ -38,7 +38,7 @@ public class FollowTrajectoryCommand extends ParallelRaceGroup {
     }
 
     private Command calculateTrajectory() {
-        return Commands.runOnce(this::calcInit).andThen(this::calcExec);
+        return Commands.runOnce(this::calcInit).andThen(Commands.run(this::calcExec));
     }
 
     private double getDriveSpeed() {
