@@ -6,8 +6,7 @@ The course alternates between structured exploration of concepts and less struct
 ## Prerequisites
 WPILib VS Code and NI FRC Game Tools should be installed.
 Git must be installed as well.
-Basic Java knowledge is required, as well as some understanding of how WPILib operates.
-This course attempts to assume that the learner does not know anything about WPILib, but may sometimes not be 100% clear.
+Basic Java knowledge is required, as well as some understanding of how VS Code operates.
 
 ## Getting started
 To start, clone the repo and checkout level 1.0:
