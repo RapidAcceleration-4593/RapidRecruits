@@ -42,20 +42,32 @@ Connect a controller and confirm that Driver Station detects it.
 ### Part B. Changing Drive Behavior
 1. In `Robot.java`, delete the cosine compensation factor (`Math.cos(turnControl * 2 / Math.PI)`) in `teleopPeriodic()`.
 
-2. Run the simulation and switch Driver Station to Teleop. How does the driving change? Is it easier to turn?
+2. Back in WPILIB, observe the UI shown below
 
-3. Reset the code to its original state.
+    ![Screenshot](assets/image.png)
+
+    This Allows you to control the running of the simulation
+    - Pause: Toggles the running of the simualtion
+    - Restart: Restarts the simulation
+    - Stop: Stops the simulation
+    - Hot code replace (lightning bolt): Allows you to update changed code without restarting
+
+    *Pretty revolutionary stuff, I know*
+
+3. Restart the simulation and switch the Driver Station mode to Teleop. How does the driving change? Is it easier to turn?
+
+4. Reset the code to its original state.
 In a terminal, run `git restore .`.
 This restores your workspace to the original state.
 Alternatively, open the Source Control panel in VS Code and discard changes on the modified files.
 
-4. In `Drivetrain.java`, change the inversion on `rightLeaderConfig` from `true` to `false`, then simulate.
+5. In `Drivetrain.java`, change the inversion on `rightLeaderConfig` from `true` to `false`, then simulate.
 How does this affect the driving pattern?
 
-5. Create a new `SparkBaseConfig` with `inverted(true)` and apply it to `leftLeader`, then simulate.
+6. Create a new `SparkBaseConfig` with `inverted(true)` and apply it to `leftLeader`, then simulate.
 Now how does the robot drive?
 
-6. Restore the workspace to the original state (see step B3).
+7. Restore the workspace to the original state (see step B3).
 
 ### Part C. Creating an Auto
 1. In the `Robot()` constructor, the trajectory starts with one waypoint: `List.of(new Translation2d(-1, -1))`.
