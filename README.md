@@ -47,7 +47,7 @@ Press enable, and see what happens.
 ### Part B. Changing Drive Behavior
 1. Go to `Robot.java` and delete the cosine compensation factor (`Math.cos(turnControl * 2 / Math.PI)`) found in `teleopPeriodic()`.
 
-2. Run the simulation. How does the driving change? Is it easier to turn?
+2. Run the simulation and switch the mode to Teleop on Driver Station. How does the driving change? Is it easier to turn?
 
 3. Now you should reset the code to its original state.
 In the command line, run the command `git restore . `.
