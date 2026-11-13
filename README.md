@@ -1,98 +1,87 @@
 # Level 1.0 Differential Drivetrain
 
 In this level, you will learn about a basic differential drivetrain.
-This level uses a TimedRobot architecture, in which there are no commands, only subsystems.
-Each subsystem's periodic method is called, along with the Robot's periodic.
+This level uses the `TimedRobot` architecture: there are no commands, only subsystems.
+Each subsystem's `periodic()` method runs every cycle, along with the robot's `periodic()` method.
 
 ## Background Knowledge
-A differential drivetrain consists one or more motors on each side of the robot.
-By driving both motors in the forward direction, the robot moves forward.
-By driving both motors in the reverse direction, the robot moves backward.
-By driving both motors in opposite directions, the robot turns.
+A differential drivetrain consists of one or more motors on each side of the robot.
+Driving both sides forward moves the robot forward.
+Driving both sides in reverse moves the robot backward.
+Driving the sides in opposite directions turns the robot in place.
 
-If one motor is driving faster than another, the robot will turn in a wide circle, in the direction of the slower driving motor.
-This means that in order for the robot to turn while driving forward, it must not be driving at maximum speed.
-If it is driving at maximum speed, than one motor cannot drive slower than the other, meaning it won't turn.
+If one side drives faster than the other, the robot turns in a wide arc toward the slower side.
+This means the robot cannot turn while driving forward at maximum speed: neither side can slow down, so it cannot turn.
+To turn while driving forward, leave some speed in reserve.
 
 ## Important Files
-[Robot.java](./src/main/java/frc/robot/Robot.java)
+- [Robot.java](./src/main/java/frc/robot/Robot.java) - robot lifecycle, teleop control, and autonomous routine.
+- [Drivetrain.java](./src/main/java/frc/robot/Drivetrain.java) - motor configuration, odometry, and drive logic.
+- [Constants.java](./src/main/java/frc/robot/Constants.java) - tunable drivetrain constants such as speed limits.
 
-[Drivetrain.java](./src/main/java/frc/robot/Drivetrain.java)
-
-[Constants.java](./src/main/java/frc/robot/Constants.java)
-
-**Note: Classes related to simulation will be clearly labeled (either by name or by package).
-Understanding simulation classes is not important for this course.**
+**Note:** Classes related to simulation are clearly labeled (by name or by package).
+Understanding them is not required for this course.
 
 ## Instructions
 ### Part A. Running the Simulation
-1. Run the simulation by pressing Ctrl+Shift+P then typing "WPILib: Simulate Robot Code".
-Make sure that "Use Real Driverstation" is checked.
+1. Start the simulation by pressing Ctrl+Shift+P and typing "WPILib: Simulate Robot Code".
+Make sure "Use Real Driverstation" is checked.
 
-2. Open up AdvantageScope. Click File > Connect to Simulator > NetworkTables 4.
-Once connected, open up the 3D Field tab.
-Then, drag and drop *SimulationPose* from the side panel.
-You should see a robot model appear in a corner of the field.
+2. Open AdvantageScope and connect with File > Connect to Simulator > NetworkTables 4.
+Once connected, open the 3D Field tab and drag and drop *SimulationPose* from the side panel.
+A robot model should appear in a corner of the field.
 
 3. Run FRC Driver Station.
-Ensure that you see both "Communications" and "Robot Code" as green.
-Connect a controller, and ensure that Driver Station sees it.
+"Communications" and "Robot Code" should both be green.
+Connect a controller and confirm that Driver Station detects it.
 
-4. Enable the robot on Driver Station.
-Drive around with the robot, using the controller joysticks.
+4. Enable the robot and drive around using the controller joysticks.
 
-5. On Driver Station, switch the mode to Autonomous.
-Press enable, and see what happens.
+5. Switch the mode to Autonomous, press Enable, and observe what happens.
 
 ### Part B. Changing Drive Behavior
-1. Go to `Robot.java` and delete the cosine compensation factor (`Math.cos(turnControl * 2 / Math.PI)`) found in `teleopPeriodic()`.
+1. In `Robot.java`, delete the cosine compensation factor (`Math.cos(turnControl * 2 / Math.PI)`) in `teleopPeriodic()`.
 
-2. Run the simulation and switch the mode to Teleop on Driver Station. How does the driving change? Is it easier to turn?
+2. Run the simulation and switch Driver Station to Teleop. How does the driving change? Is it easier to turn?
 
-3. Now you should reset the code to its original state.
-In the command line, run the command `git restore . `.
+3. Reset the code to its original state.
+In a terminal, run `git restore .`.
 This restores your workspace to the original state.
-Alternatively, navigate to the Source Control panel of VS Code and press the Undo button on the changed files.
+Alternatively, open the Source Control panel in VS Code and discard changes on the modified files.
 
-4. In `Drivetrain.java`, change the inversion on `rightLeaderConfig` from `true` to `false`.
-Simulate.
+4. In `Drivetrain.java`, change the inversion on `rightLeaderConfig` from `true` to `false`, then simulate.
 How does this affect the driving pattern?
 
-5. Now, create a new `SparkBaseConfig` with `inverted(true)`.
-Apply it to the `leftLeader`.
-Simulate.
+5. Create a new `SparkBaseConfig` with `inverted(true)` and apply it to `leftLeader`, then simulate.
 Now how does the robot drive?
 
-6. Restore the workspace to the original state (See step B3).
+6. Restore the workspace to the original state (see step B3).
 
 ### Part C. Creating an Auto
-1. In the constructor of `Robot.java`, change the instantiation of `trajectory` to have a waypoint.
-Do this by changing `List.of()` to `List.of(new Translation2d(-1, -1))`
+1. In the `Robot()` constructor, the trajectory starts with one waypoint: `List.of(new Translation2d(-1, -1))`.
+Change the waypoint's coordinates, or add another `Translation2d` to the list.
 
-2. Simulate the auto.
-What changed?
+2. Simulate the auto. What changed?
 
 3. Create your own trajectory.
-Try to make it drive in a rectangle around the entire arena.
+Try to make it drive in a rectangle around the entire field.
 
-### Part D. Changing the speed.
-1. Reset the workspace.
+### Part D. Changing the Speed
+1. Reset the workspace (see step B3).
 
 2. In `Constants.java`, change `kMaxSpeed` to `1.0`.
 
-3. Simulate.
-What changed?
+3. Simulate. What changed?
 
 4. In `Constants.java`, change `kMaxAngularSpeed` to `1.0`.
 
-5. Simulate.
-What changed?
+5. Simulate. What changed?
 
 6. Change `kMaxSpeed` to `100.0`.
 
 7. Simulate.
-Why do you think that it isn't 100x faster?
-Why do you think that it is impossible to turn while driving forward?
+Why isn't it 100x faster?
+Why is it impossible to turn while driving forward?
 How might this relate to cosine compensation?
 
 8. Change `kMaxAngularSpeed` to `100.0`.
@@ -100,11 +89,11 @@ How might this relate to cosine compensation?
 9. Simulate.
 
 These examples demonstrate the importance of properly tuning physical constants to match reality.
-Setting the maximum speed to 100 m/s doesn't mean it will drive that fast!
+Setting the maximum speed to 100 m/s doesn't mean the robot will drive that fast!
 
 ## Next Section
-To move on to the next level, execute the commands below:
-```
+To move on to the next level, run:
+```bash
 git restore .
 git checkout level-1.1
 ```
